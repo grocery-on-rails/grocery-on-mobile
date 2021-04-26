@@ -12,6 +12,9 @@ class InputBox extends StatelessWidget {
   final TextEditingController _textEditingController = TextEditingController();
 
   String get text => _textEditingController.text;
+  set text(String value) {
+    _textEditingController.text = value;
+  }
 
   void requestFocus() {
     _focusNode.requestFocus();

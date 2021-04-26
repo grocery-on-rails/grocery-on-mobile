@@ -1,9 +1,16 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
+import 'package:grocery_on_rails/utils/constants.dart';
 import 'package:grocery_on_rails/utils/network.dart';
 import 'package:grocery_on_rails/widgets/big_text_container.dart';
 import 'package:grocery_on_rails/widgets/cart_card.dart';
+import 'package:grocery_on_rails/widgets/edit_screen.dart';
+import 'package:grocery_on_rails/widgets/my_form.dart';
+import 'package:grocery_on_rails/widgets/my_radio_form.dart';
 import 'package:grocery_on_rails/widgets/rounded_button.dart';
 import 'package:grocery_on_rails/pages/signin.dart';
+import 'package:grocery_on_rails/pages/orders.dart';
 
 
 class CartPage extends StatefulWidget {
@@ -12,6 +19,30 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  
+  void viewSnackBar() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Order Successfully Placed!',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+        action: SnackBarAction(
+          label: 'View Orders',
+          textColor: kColorOrange,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => OrdersPage()),
+            );
+          },
+        ),
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BigTextContainer(
@@ -70,6 +101,7 @@ class _CartPageState extends State<CartPage> {
             child: BigRoundedButton(
               "CHECK OUT",
               onPress: (){
+
                 if (DataManager().cart.map.isEmpty)
                   return;
 
@@ -81,7 +113,59 @@ class _CartPageState extends State<CartPage> {
                   return;
                 }
 
-                // TODO
+                EditScreen(
+                  context: context,
+                  title: "Select Address",
+                  form: MyRadioForm(
+                    actionText: "SELECT",
+                    labelTexts: DataManager().settings.addresses,
+                    onSubmit: (address) {
+                      Navigator.pop(context);
+                      
+                      EditScreen(
+                        context: context,
+                        title: "Payment",
+                        form: MyForm(
+                          actionText: "PAY",
+                          hintTexts: LinkedHashMap.from({
+                            "Name on card": false,
+                            "Card number": false,
+                            "Expiry Date MM/YY": false,
+                            "CVV": true
+                          }),
+                          onSubmit: (values) async {
+
+                            // format validation
+                            if (RegExp(r'^\s*$').hasMatch(values[0]))
+                              return "Input a valid name";
+
+                            if (!RegExp(r'^\d{16}$').hasMatch(values[1].replaceAll(' ', '')))
+                              return "Card number incorrect";
+
+                            if (!RegExp(r'^\d{1,2}\/\d{2}$').hasMatch(values[2].replaceAll(' ', '')))
+                              return "Expiry data incorrect";
+                            
+                            if (!RegExp(r'^\d{3,4}$').hasMatch(values[3].replaceAll(' ', '')))
+                              return "CVV incorrect";
+
+
+                            // Requests
+                            await DataManager().order(address, values[0]);
+                            
+                            setState(() {
+                              Navigator.pop(context);
+                            });
+
+                            viewSnackBar();
+
+                            return "";
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                );
+
               },
             ),
           ),

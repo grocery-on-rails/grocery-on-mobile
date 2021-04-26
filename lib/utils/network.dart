@@ -170,6 +170,58 @@ class Product {
 }
 
 
+class Order {
+  // {order_id: 6085b899166dc691e7e348c41619379276.5519283, 
+  // status: pending, 
+  // order_time: 1619379276.5519283, 
+  // delivery_time: null, 
+  // address: My Address, 
+  // cart: [{product_id: 605b1597a61de825808a7e84, quantity: 5}, {product_id: 605b1598a61de825808a80d3, quantity: 8}]}
+  
+  final String id;
+  final String status;
+  final DateTime orderTime; // DateTime.fromMillisecondsSinceEpoch(int(order_time*1000))
+  final DateTime deliveryTime;
+  final String address;
+  final List<CartItem> cart;
+
+  Order({
+    this.id,
+    this.status,
+    this.orderTime,
+    this.deliveryTime,
+    this.address,
+    this.cart,
+  });
+
+  static Future<Order> fromJSON(Map<String, dynamic> json) async {
+
+    List<CartItem> l = [];
+    
+    for (dynamic i in json['cart']) {
+      if (i.isNotEmpty)
+        l.add(          
+          CartItem(
+            productSummary: (await Product.fromID(i['product_id'], {})).summary(),
+            quantity: i['quantity']
+          )
+        );
+    }
+
+    return Order(
+      id: json['order_id'],
+      status: json['status'],
+      orderTime: DateTime.fromMillisecondsSinceEpoch((json['order_time'] * 1000).floor()),
+      deliveryTime: json['delivery_time']==null ? null : DateTime.fromMillisecondsSinceEpoch((json['delivery_time'] * 1000).floor()),
+      address: json['address'],
+      cart: l,
+    );
+
+  }
+
+}
+
+
 class Settings {
   final Map<String, String> headers;
 
@@ -190,11 +242,45 @@ class Settings {
   String get username => _username;
   List<String> get addresses => _addresses;
 
-  set email(String value) {
-
+  void _changeSettings(Map<String, dynamic> oneValue) async {
+    await http.post(
+      Uri.parse('$theURL/userprofile'),
+      headers: {
+        ...contentTypeJSON,
+        ...headers,
+      },
+      body: jsonEncode(oneValue),
+    );
   }
 
+  set email(String value) {
+    _changeSettings({'email': value});
+    _email = value;
+  }
 
+  set password(String value) {
+    _changeSettings({'password': value});
+    _password = value;
+  }
+
+  set username(String value) {
+    _changeSettings({'username': value});
+    _username = value;
+  }
+
+  void changeAddress(int index, String value) {
+    if (value.isEmpty)
+      _addresses.removeAt(index);
+    else
+      _addresses[index] = value;
+
+    _changeSettings({'address': _addresses});
+  }
+
+  void addAddress(String value) {
+    _addresses.add(value);
+    _changeSettings({'address': _addresses});
+  }
 }
 
 
@@ -218,8 +304,6 @@ class DataManager {
 
   DataManager._internal() {
 
-    // TODO: check internal storage for the token
-    
     cat = _getCat();
     home = _getHome();
     cart = Cart(headers: this.headers);
@@ -365,6 +449,39 @@ class DataManager {
 
     return "";
 
+  }
+
+
+  Future<void> order(String address, String paymentMethod) async {
+    await http.post(
+      Uri.parse('$theURL/order'),
+      headers: {
+        ...contentTypeJSON,
+        ...headers,
+      },
+      body: jsonEncode({
+        "address": address,
+        "payment_method": paymentMethod,
+      }),
+    ).then((value) {
+      this.cart = Cart(headers: this.headers);
+    });
+
+  }
+
+  Future<List<Order>> orders() async {
+    http.Response r = await http.get(
+      Uri.parse('$theURL/order'),
+      headers: this.headers,
+    );
+    final responseJson = jsonDecode(r.body);
+
+    List<Order> l = [];
+    for (dynamic i in responseJson) {
+      l.add(await Order.fromJSON(i));
+    }
+
+    return l;
   }
 
 }
