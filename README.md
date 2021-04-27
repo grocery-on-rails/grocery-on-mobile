@@ -1,6 +1,6 @@
 # Grocery on Rails
 
-eGrocerry app built with flutter
+eGrocery app built with flutter
 
 This repo represents the mobile app part of the project of the Software Engineering Course (CS-UH 2012) at New York University Abu Dhabi, Spring 2021
 
