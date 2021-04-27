@@ -23,18 +23,10 @@ The following list represents the main features implemented in the application
 
 ## Screenshots
 
-Home Page                  |  Product Page
-:-------------------------:|:-------------------------:
-![](images/home.png)       |  ![](images/product.png)
+Home Page                  |  Product Page             | Orders Page                |  Cart Page
+:-------------------------:|:-------------------------:|:--------------------------:|:-------------------------:
+![](images/home.png)       |  ![](images/product.png)  | ![](images/orders.png)     |  ![](images/cart.png)
 
-Orders Page                |  Cart Page
-:-------------------------:|:-------------------------:
-![](images/orders.png)     |  ![](images/cart.png)
-
-Search Page                |  Account Page
-:-------------------------:|:-------------------------:
-![](images/search.png)     |  ![](images/account.png)
-
-Categories Page            |  Sign-in Page
-:-------------------------:|:-------------------------:
-![](images/categories.png) |  ![](images/signin.png)
+Search Page                |  Account Page             | Categories Page            |  Sign-in Page
+:-------------------------:|:-------------------------:|:--------------------------:|:-------------------------:
+![](images/search.png)     |  ![](images/account.png)  | ![](images/categories.png) |  ![](images/signin.png)
