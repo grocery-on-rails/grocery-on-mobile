@@ -25,3 +25,12 @@ const kTextStyleProductSummaryMain = TextStyle(
 const kTextStyleProductSummaryPrice = TextStyle(
   fontSize: 15,
 );
+
+const kTextStyleWhite = TextStyle(
+  color: Colors.white,
+);
+
+const kTextStyleWhiteBold = TextStyle(
+  color: Colors.white,
+  fontWeight: FontWeight.bold,
+);

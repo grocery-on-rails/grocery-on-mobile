@@ -31,6 +31,9 @@ dependencies:
   http: ^0.13.1 
   cached_network_image: ^3.0.0
   group_list_view: ^1.1.1
+  mailto: ^2.0.0
+  url_launcher: ^6.0.3
+
 
 dev_dependencies:
   flutter_test:

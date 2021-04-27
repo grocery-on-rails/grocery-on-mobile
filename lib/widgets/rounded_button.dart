@@ -6,22 +6,26 @@ class RoundedButton extends StatelessWidget {
   final void Function() onPress;
   final List<Widget> children;
   final double height;
+  final Color backgroundColor;
 
   const RoundedButton({
     Key key,
     @required this.children,
-    @required this.onPress,
-    this.height
+    this.onPress,
+    this.backgroundColor = kColorOrange,
+    this.height,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: this.onPress,
+      onTap: () {
+        this.onPress?.call();
+      },
       child: Container(
         height: this.height,
         decoration: BoxDecoration(
-          color: kColorOrange,
+          color: this.backgroundColor,
           borderRadius: BorderRadius.circular(25)
         ),
         child: Padding(

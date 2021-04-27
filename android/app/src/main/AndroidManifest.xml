@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.grocery_on_rails">
    <application
-        android:label="grocery_on_rails"
+        android:label="grocery on rails"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

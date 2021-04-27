@@ -1,0 +1,13 @@
+## MISSING FEATURES
+1. Show discount in SearchCard as it does in ProductSummaryCard
+2. If you have products in your cart before sign in, they clear when you sign in
+3. Adding logo and changing the name 
+
+## Bugs
+1. "Controller's length property (4) does not match the number of tabs (6) present in TabBar's tab property."
+    [PAGE] =>
+        HomePage
+    [TO REPLICATE] =>
+        1. press home (not signed in)
+        2. press account, and sign in
+        3. press the refresh button

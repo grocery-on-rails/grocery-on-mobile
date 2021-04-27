@@ -20,6 +20,7 @@ class _NestedTabBarState extends State<NestedTabBar> with TickerProviderStateMix
 
   @override
   void initState() {
+    print('Nested Tab Bar init');
     super.initState();
     _nestedTabController = new TabController(length: this.widget.labels.length, vsync: this);
   }

@@ -1,16 +1,40 @@
-# grocery_on_rails
+# Grocery on Rails
 
-A new Flutter project.
+eGrocerry app built with flutter
 
-## Getting Started
+This repo represents the mobile app part of the project of the Software Engineering Course (CS-UH 2012) at New York University Abu Dhabi, Spring 2021
 
-This project is a starting point for a Flutter application.
+That project was developed using *Agile Scrum* software development methodology as described in the [project documentation](/project_documentation.pdf)
 
-A few resources to get you started if this is your first Flutter project:
+## Functionalities
+The following list represents the main features implemented in the application
+1. Sign-up for new customers
+2. Sign-in for already existing customers
+3. Modify Account (email, password, name, and address)
+4. Searching (filtering, and sorting)
+5. Categories view
+6. Product view
+7. Adding product to shopping cart
+8. Modifying shopping cart
+9. Viewing best deals
+10. Viewing a recommended list of items
+11. Finalizing order
+12. Access order history
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+## Screenshots
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Home Page                  |  Product Page
+:-------------------------:|:-------------------------:
+![](images/home.png)       |  ![](images/product.png)
+
+Orders Page                |  Cart Page
+:-------------------------:|:-------------------------:
+![](images/orders.png)     |  ![](images/cart.png)
+
+Search Page                |  Account Page
+:-------------------------:|:-------------------------:
+![](images/search.png)     |  ![](images/account.png)
+
+Categories Page            |  Sign-in Page
+:-------------------------:|:-------------------------:
+![](images/categories.png) |  ![](images/signin.png)

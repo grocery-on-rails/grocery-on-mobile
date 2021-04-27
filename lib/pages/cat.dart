@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:grocery_on_rails/utils/constants.dart';
-import 'package:grocery_on_rails/utils/strings.dart';
+import 'package:grocery_on_rails/utils/network.dart';
+import 'package:grocery_on_rails/utils/extensions.dart';
 import 'package:grocery_on_rails/widgets/big_text_container.dart';
 import 'package:grocery_on_rails/pages/search.dart';
 
 class CatPage extends StatelessWidget {
-  
-  final Future<Map<String, List<String>>> data;
-  
-  CatPage({this.data});
-
   @override
   Widget build(BuildContext context) {
     return BigTextContainer(
@@ -25,7 +21,7 @@ class CatPage extends StatelessWidget {
         SizedBox(height: 5),
         Expanded(
           child: FutureBuilder(
-            future: data,
+            future: DataManager().cat,
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               if (snapshot.hasData) {
                 return ListView(

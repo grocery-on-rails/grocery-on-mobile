@@ -47,8 +47,26 @@ class _ProductPageState extends State<ProductPage> {
                       setState(() {});
                     },
                   ),
-                
-                if (!DataManager().cart.map.containsKey(this.widget.productSummary.id))
+
+                if (!DataManager().cart.map.containsKey(this.widget.productSummary.id) &&
+                this.widget.productSummary.stock == 0)
+                  RoundedButton(
+                    backgroundColor: Colors.grey,
+                    children: [
+                      Icon(Icons.shopping_bag, color: Colors.white),
+                      SizedBox(width: 5,),
+                      Text(
+                        "Out of Stock",
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 5,),
+                    ],
+                  ),
+
+                if (!DataManager().cart.map.containsKey(this.widget.productSummary.id) &&
+                this.widget.productSummary.stock > 0)
                   RoundedButton(
                     onPress: () {
                       setState(() {
@@ -132,6 +150,7 @@ class ProductPageContent extends StatelessWidget {
     return Expanded(
       child: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               product.name,

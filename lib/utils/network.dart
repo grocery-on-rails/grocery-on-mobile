@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:http/http.dart' as http;
+import 'package:grocery_on_rails/utils/extensions.dart';
 
 
 const theURL = "https://grocery-on-rails.herokuapp.com";
@@ -9,6 +11,14 @@ const Map<String, String> contentTypeJSON = {
   'content-type': 'application/json',
 };
 
+extension GetTotal on List<CartItem> {
+  double get total {
+    double _total = 0;
+    for (CartItem c in this)
+      _total += c.productSummary.price * c.quantity;
+    return _total;
+  }
+}
 
 class CartItem {
 
@@ -136,16 +146,56 @@ class Product {
   const Product({this.id, this.name, this.price, this.oldPrice, this.stock, this.image, this.subcategories, this.description, this.information});
 
   factory Product.fromJSON(Map<String, dynamic> json) {
+
+    String name = json['name'];
+    List<String> subCatList = List<String>.from(json['subcategory']);
+
+    //! ONLY LOCAL : NO BACKEND SUPPORT
+    int expiryDuration = subCatList.contains('Imperfect') ?
+                          (name.length % 3) + 1 :
+                          ((name.length+3)*11) + 3;
+
+    String s = "\n";
+    try {
+      List<List<String>> l = [];
+
+      for (dynamic d in json['others']['info_list']['nutritional_information']) {
+        l.add(List<String>.from(d));
+        l.last = l.last.sublist(0, l.last.length-1);
+      }
+
+      l = l.sublist(0, 4);
+
+      for (int i = 0; i < l[0].length; i++) {
+        for (int j = 0; j < l.length; j++) {
+          s += l[j][i].padRight(
+            l[j].map((e) => e.length).reduce(max)
+          ) + ' ';
+        }
+        s += "\n";
+      }
+
+    } catch(e) {
+      s = "";
+    }
+
+
     return Product(
       id: json['_id']['\$oid'],
-      name: json['name'],
+      name: name,
       price: json['price'] - json['discount'],
       oldPrice: json['discount'] == 0 ? 0 : json['price'],
       stock: json['stock'],
       image: CachedNetworkImageProvider(json['image_list'][0]), //! List
       description: json['description'],
-      subcategories: List<String>.from(json['subcategory']),
-      information: "Unit       ${json['others']['unit']}\nQuantity   ${json['others']['quantity']}\nCountry    ${json['others']['country']}",
+      subcategories: subCatList,
+      information: [
+        "Expiry Date    ${DateTime.now().add(Duration(days: expiryDuration)).normalFormat}",
+        "Unit           ${json['others']['unit']}",
+        "Quantity       ${json['others']['quantity']}",
+        "Country        ${json['others']['country']}",
+        s
+      ].join("\n"),
     );
   }
 
@@ -171,18 +221,12 @@ class Product {
 
 
 class Order {
-  // {order_id: 6085b899166dc691e7e348c41619379276.5519283, 
-  // status: pending, 
-  // order_time: 1619379276.5519283, 
-  // delivery_time: null, 
-  // address: My Address, 
-  // cart: [{product_id: 605b1597a61de825808a7e84, quantity: 5}, {product_id: 605b1598a61de825808a80d3, quantity: 8}]}
-  
   final String id;
   final String status;
   final DateTime orderTime; // DateTime.fromMillisecondsSinceEpoch(int(order_time*1000))
   final DateTime deliveryTime;
   final String address;
+  final String paymentMethod;
   final List<CartItem> cart;
 
   Order({
@@ -191,6 +235,7 @@ class Order {
     this.orderTime,
     this.deliveryTime,
     this.address,
+    this.paymentMethod,
     this.cart,
   });
 
@@ -214,11 +259,18 @@ class Order {
       orderTime: DateTime.fromMillisecondsSinceEpoch((json['order_time'] * 1000).floor()),
       deliveryTime: json['delivery_time']==null ? null : DateTime.fromMillisecondsSinceEpoch((json['delivery_time'] * 1000).floor()),
       address: json['address'],
+      paymentMethod: json['payment_method'],
       cart: l,
     );
 
   }
 
+  String getPaymentObfuscated() {
+    if (this.paymentMethod.length >= 4)
+      return "**** **** **** ${this.paymentMethod.substring(this.paymentMethod.length - 4)}";
+    else
+      return "**** **** **** ****";
+  }
 }
 
 
@@ -305,12 +357,16 @@ class DataManager {
   DataManager._internal() {
 
     cat = _getCat();
-    home = _getHome();
+    refreshHome();
     cart = Cart(headers: this.headers);
 
 
   }
 
+
+  void refreshHome() {
+    home = _getHome();
+  }
 
   Future<dynamic> _getHome() async {
     final response = await http.get(
@@ -357,7 +413,7 @@ class DataManager {
     this.token = null;
 
     // reload home/cart
-    home = _getHome();
+    refreshHome();
     cart = Cart(headers: this.headers);
   }
 
@@ -397,7 +453,7 @@ class DataManager {
     );
 
     // reload home/cart
-    home = _getHome();
+    refreshHome();
     cart = Cart(headers: this.headers);
 
 
@@ -443,7 +499,7 @@ class DataManager {
     );
 
     // reload home/cart
-    home = _getHome();
+    refreshHome();
     cart = Cart(headers: this.headers);
 
 
@@ -481,7 +537,8 @@ class DataManager {
       l.add(await Order.fromJSON(i));
     }
 
-    return l;
+    // to be in reverse chronological order (recent first)
+    return l.reversed.toList();
   }
 
 }
@@ -496,17 +553,74 @@ enum SortingType {
   PriceHighToLow,
 }
 
+extension GetIcon on SortingType {
+  IconData get icon {
+    switch (this) {
+      case SortingType.PriceLowToHigh:
+        return Icons.arrow_upward_rounded;
+      case SortingType.PriceHighToLow:
+        return Icons.arrow_downward_rounded;
+      case SortingType.Relevance:
+      default:
+        return Icons.sort;
+    }
+  }
+
+  String get requestText {
+    switch (this) {
+      case SortingType.PriceLowToHigh:
+        return 'price+';
+      case SortingType.PriceHighToLow:
+        return 'price-';
+      case SortingType.Relevance:
+      default:
+        return '';
+    }  
+  }
+
+  String get displayText {
+    switch (this) {
+      case SortingType.PriceLowToHigh:
+        return 'Price Ascending';
+      case SortingType.PriceHighToLow:
+        return 'Price Descending';
+      case SortingType.Relevance:
+      default:
+        return 'Relevance';
+    }
+  }
+}
+
+SortingType sortingTypeFromDisplayText(String text) {
+  switch (text) {
+    case 'Price Ascending':
+      return SortingType.PriceLowToHigh;
+    case 'Price Descending':
+      return SortingType.PriceHighToLow;
+    case 'Relevance':
+    default:
+      return SortingType.Relevance;
+  }
+}
+
 Future<List<ProductSummary>> searchProduct(String keyword, {
   SortingType sort = SortingType.Relevance, 
-  double minPrice,
-  double maxPrice,
-
+  String subcategory = ''
 }) async {
 
-  final response = await http.get(
-    Uri.parse('$theURL/search/$keyword'),
-    headers: {} // TODO
+  final response = await http.post(
+    Uri.parse(keyword == '' ?
+                '$theURL/search' :
+                '$theURL/search/$keyword'),
+    headers: contentTypeJSON,
+    body: jsonEncode({
+      if (sort.requestText != '')
+        'sort': sort.requestText,
+      if (subcategory != '')
+        'subcategory' : subcategory,
+    }),
   );
+
   return List<ProductSummary>.from(jsonDecode(response.body).map((p) => ProductSummary.fromJSON(p)));
 
 }

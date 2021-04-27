@@ -30,7 +30,8 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    DataManager(); // 
+    // To Initialize and fetch resources
+    DataManager();
 
     toHome = () {
       setState(() {
@@ -39,8 +40,8 @@ class _MyAppState extends State<MyApp> {
     };
     
     _widgetOptions = [
-      HomePage(data: DataManager().home),
-      CatPage(data: DataManager().cat),
+      HomePage(),
+      CatPage(),
       CartPage(),
       AccountPage(),
     ]; 

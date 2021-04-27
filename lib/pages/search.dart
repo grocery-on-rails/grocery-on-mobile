@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:grocery_on_rails/utils/constants.dart';
 import 'package:grocery_on_rails/utils/network.dart';
 import 'package:grocery_on_rails/widgets/shadow_button.dart';
-import 'package:grocery_on_rails/widgets/product_summary_card.dart';
+import 'package:grocery_on_rails/widgets/search_card.dart';
+import 'package:grocery_on_rails/widgets/edit_screen.dart';
+import 'package:grocery_on_rails/widgets/my_radio_form.dart';
 
 class SearchPage extends StatefulWidget {
 
@@ -16,7 +18,34 @@ class SearchPage extends StatefulWidget {
 
 // redesign
 class _SearchPageState extends State<SearchPage> {
+  
   List<Widget> searchItems = [];
+
+  String keyword = '';
+  SortingType sort = SortingType.Relevance;
+  String category = '';
+
+  @override
+  void initState() {
+    super.initState();
+
+    this.category = (this.widget.cat ?? '');
+    if (this.category != '')
+      search();
+  }
+
+  void search() async {
+    if (keyword == '' && category == '')
+      return;
+    searchItems = null;
+    setState(() {});
+    this.searchItems = (await searchProduct(
+      keyword,
+      sort: sort,
+      subcategory: category
+    )).map((i) => SearchCard(i)).toList();
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,42 +59,129 @@ class _SearchPageState extends State<SearchPage> {
               child: Column(
                 // mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      ShadowSquareButton(
-                        color: Colors.white,
-                        icon: Icon(Icons.arrow_back, color: kColorOrange),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Expanded(
-                        child: SearchBar(
-                          hintText: this.widget.cat ?? 'Java, spaghetti, and more',
-                          onSubmitted: (String value) async {
-                            // TODO: new widget
-                            this.searchItems = (await searchProduct(value)).map((i) => ProductSummaryCard(productSummary: i)).toList();
-                            setState(() {
-                              
-                            });
+                  Container(
+                    child: Row(
+                      children: [
+                        ShadowSquareButton(
+                          color: Colors.white,
+                          icon: Icon(Icons.arrow_back, color: kColorOrange),
+                          onPressed: () {
+                            Navigator.pop(context);
                           },
                         ),
-                      ),
-                    ]               
+                        SizedBox(width: 5),
+                        Expanded(
+                          child: SearchBar(
+                            hintText: 'Java, spaghetti, and more',
+                            onSubmitted: (String value) async {
+                              this.keyword = value;
+                              search();
+                            },
+                          ),
+                        ),
+                        SizedBox(width: 5),
+                        ShadowSquareButton(
+                          color: Colors.white,
+                          icon: Icon(this.sort.icon, color: kColorOrange),
+                          onPressed: () {
+
+                            EditScreen(
+                              context: context,
+                              title: "Pick Sorting Option",
+                              form: MyRadioForm(
+                                actionText: "SELECT",
+                                labelTexts: [
+                                  SortingType.Relevance.displayText,
+                                  SortingType.PriceLowToHigh.displayText,
+                                  SortingType.PriceHighToLow.displayText,
+                                ],
+                                initialValue: (this.sort.displayText == '' ? null : this.sort.displayText),
+                                onSubmit: (value) {
+
+                                  this.sort = sortingTypeFromDisplayText(value);
+                                  search();                                  
+
+                                  Navigator.pop(context);
+
+                                }
+                              ),
+                            );
+
+                          },
+                        ),
+                        SizedBox(width: 5),
+                        ShadowSquareButton(
+                          color: this.category == '' ? Colors.white : kColorOrange,
+                          icon: Icon(Icons.filter_alt_outlined, color: this.category == '' ? kColorOrange : Colors.white),
+                          onPressed: () {
+
+                            if (this.category != '') {
+                              setState(() {
+                                this.category = '';
+                              });
+                              search();
+                              return;
+                            }
+
+                            EditScreen(
+                              context: context,
+                              title: "Pick Category",
+                              form: FutureBuilder(
+                                future: DataManager().cat,
+                                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.done) {
+                                      List<String> labels = List<String>.from(snapshot.data.values.toList().expand((i) => List<String>.from(i)).toSet());
+                                      labels.sort();
+                                      return MyRadioForm(
+                                        actionText: "SELECT",
+                                        labelTexts: labels,
+                                        initialValue: (this.category == '' ? null : this.category),
+                                        onSubmit: (value) {
+
+                                          this.category = value;
+                                          search();       
+
+                                          Navigator.pop(context);
+
+                                        }
+                                    );
+                                  }
+                                  return Center(
+                                    child: CircularProgressIndicator()
+                                  ); 
+                                }
+                              )
+                            );
+                            
+                          },
+                        ),
+                      ]               
+                    ),
                   ),
                   SizedBox(
                     height: 15,
                   ),
-                  Expanded(
-                    child: GridView.count(
-                      childAspectRatio: 2/3,
-                      crossAxisCount: 2,
-                      children: this.searchItems,
+                  if (searchItems == null)
+                    Expanded(
+                      child: Center(
+                        child: CircularProgressIndicator()
+                      ),
                     ),
-                  ),
+                  if (searchItems?.length == 0)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 5, top: 10),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("No search results")
+                      ),
+                    ),
+                  if (!(searchItems == null || searchItems.length == 0))
+                    Expanded(
+                      child: ListView(
+                        padding: EdgeInsets.all(6),
+                        children: this.searchItems,
+                      )
+                    ),
                 ],
               ),
             ),

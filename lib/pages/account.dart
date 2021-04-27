@@ -1,6 +1,8 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:group_list_view/group_list_view.dart';
+import 'package:mailto/mailto.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:grocery_on_rails/utils/constants.dart';
 import 'package:grocery_on_rails/utils/network.dart';
 import 'package:grocery_on_rails/utils/navigation.dart';
@@ -216,10 +218,58 @@ class _AccountPageState extends State<AccountPage> {
         AccountItem(
           title: 'Help',
           subtitle: 'Find help by contacting us',
+          onPress: () {
+            EditScreen(
+              context: this.context,
+              title: "Contact Us", 
+              form: MyForm(
+                actionText: "SEND",
+                hintTexts: LinkedHashMap.from({
+                  "Title": false,
+                  "Message": false,
+                }),
+                onSubmit: (values) async {
+
+                  DataManager().settings.username = values[0];
+
+                  await launch(
+                    Mailto(
+                        to: ["grocery-on-rails@gmail.com"],
+                        subject: values[0],
+                        body: values[1],
+                    ).toString()
+                  );
+
+                  setState(() {
+                    Navigator.pop(context);
+                  });
+
+                  return "";
+
+                },
+              )
+            );
+          }
         ),
         AccountItem(
           title: 'About Us',
           subtitle: 'Learn more about us, Grocery On Rails',
+          onPress: () {
+            EditScreen(
+              context: this.context,
+              title: "About Us", 
+              form: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "This app was created as a part of the project of the Software Engineering course taught by professor Luiz Capretz\n\nIt was created by \n    Omar Kallas  => Adminstrator View\n    Phillip Wang => Backend\n    Zayd Maradni => Database\n    Zyad Yasser  => Flutter App\n\n",
+                  softWrap: true,
+                  style: TextStyle(
+                    fontFamily: 'monaco'
+                  ),
+                ),
+              )
+            );
+          }
         )],
     };
 

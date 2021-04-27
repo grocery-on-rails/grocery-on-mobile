@@ -143,14 +143,14 @@ class _CartPageState extends State<CartPage> {
                               return "Card number incorrect";
 
                             if (!RegExp(r'^\d{1,2}\/\d{2}$').hasMatch(values[2].replaceAll(' ', '')))
-                              return "Expiry data incorrect";
+                              return "Expiry date incorrect";
                             
                             if (!RegExp(r'^\d{3,4}$').hasMatch(values[3].replaceAll(' ', '')))
                               return "CVV incorrect";
 
 
                             // Requests
-                            await DataManager().order(address, values[0]);
+                            await DataManager().order(address, values[1].replaceAll(' ', ''));
                             
                             setState(() {
                               Navigator.pop(context);
